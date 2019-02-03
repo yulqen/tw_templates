@@ -2,6 +2,8 @@
 
 """Main module."""
 import re
+import datetime
+import uuid
 import subprocess
 import yaml
 
@@ -14,14 +16,41 @@ tasks = []
 
 
 class Task:
-    def __init__(self, id, description, tags, project, due, depends, annotation):
-        self.id = id
+    def __init__(
+        self,
+        description=None,
+        tags=None,
+        project=None,
+        due=None,
+        depends=None,
+        annotations=None,
+    ):
         self.desc = description
         self.tags = tags
         self.proj = project
         self.due = due
         self.dep = depends
-        self.annot = annotation
+        self.annot = annotations
+        self.status = "pending"
+        self.uuid = str(uuid.uuid4())
+        self.entry = datetime.datetime.now()
+        self._dict = self._to_dict()
+
+    def _to_dict(self):
+        # TODO we need to get the actual attributes that are passed in.
+        # Then we we need to create the dict accordingly so that
+        # we don't end up with None values in the json.
+        _d = {}
+        return dict(
+            description=self.desc,
+            tags=self.tags,
+            project=self.proj,
+            due=self.due,
+            depends=self.dep,
+            status=self.status,
+            uuid=self.uuid,
+            entry=self.entry,
+        )
 
     def parse(self, data):
         """
@@ -34,6 +63,9 @@ class Task:
         self.due = data.get("due")
         self.dep = data.get("dep")
         self.annot = data.get("annot")
+
+    def to_json(self):
+        pass
 
     def __str__(self):
         return self.desc

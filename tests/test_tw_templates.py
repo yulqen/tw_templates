@@ -2,12 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `tw_templates` package."""
+import datetime
+import json
+
+from uuid import uuid4
 
 import pytest
 
 from click.testing import CliRunner
 
-from tw_templates import tw_templates
+from tw_templates.task import Task
 from tw_templates import cli
 
 
@@ -36,3 +40,16 @@ def test_command_line_interface():
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output
+
+
+def test_task_obj():
+    """
+    Test the Task object.
+    """
+    t_dict = {
+        "description": "Test Task",
+        "annotations": ["First annotation", "Second annotation"]
+    }
+    t = Task(**t_dict)
+    t_json = t.to_json()
+    assert json.loads(t_json)['description'] == "Test Task"
