@@ -25,6 +25,8 @@ class Task:
         tags=None,
         project=None,
         due=None,
+        wait=None,
+        scheduled=None,
         depends=None,
         annotations=None,
     ):
@@ -40,6 +42,10 @@ class Task:
             self.annot = self._add_annotations()
         if due:
             self.due = self._convert_date(due)
+        if scheduled:
+            self.scheduled = self._convert_date(scheduled)
+        if wait:
+            self.wait = self._convert_date(wait)
         self._dict = self._to_dict()
 
     def _convert_date(self, date):
@@ -60,6 +66,8 @@ class Task:
             tags=self.tags,
             project=self.proj,
             due=self.due,
+            scheduled=self.scheduled,
+            wait=self.wait,
             depends=self.dep,
             status=self.status,
             uuid=self.uuid,
