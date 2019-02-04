@@ -65,3 +65,4 @@ def test_date_parser():
     Test date parsing used to build a Task() object.
     """
     assert parse("28 Dec 2019 12am") == "2019-12-28T00:00:00Z"
+    assert parse("12 Dec") == "2019-12-12T00:00:00Z"
