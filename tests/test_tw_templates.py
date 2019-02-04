@@ -8,7 +8,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from tw_templates.task import Task
+from tw_templates.task import Task, date_calc_matcher
 from tw_templates.utils import date_parser as parse
 from tw_templates import cli
 
@@ -47,7 +47,7 @@ def test_task_obj():
     t_dict = {
         "description": "Test Task",
         "annotations": ["First annotation", "Second annotation"],
-        "tags": ['tag0', 'tag1', 'tag2'],
+        "tags": ["tag0", "tag1", "tag2"],
         "due": "23 March",
         "scheduled": "2019-08-30",
         "wait": "24th July 2024",
@@ -70,3 +70,27 @@ def test_date_parser():
     """
     assert parse("28 Dec 2019 12am") == "2019-12-28T00:00:00Z"
     assert parse("12 Dec") == "2019-12-12T00:00:00Z"
+
+
+def test_date_calc_match():
+    d_str = "due-2days"
+    e_str = "scheduled+30weeks"
+    assert date_calc_matcher(d_str) == ("due", "-", 2, "days")
+    assert date_calc_matcher(e_str) == ("scheduled", "+", 30, "weeks")
+
+
+def test_date_calcs():
+    """
+    An Task() object can use "-Ndays, -Nweeks" nomenclature to calculate dates.
+    """
+    t_dict = {
+        "description": "Test Task",
+        "annotations": ["First annotation", "Second annotation"],
+        "tags": ["tag0", "tag1", "tag2"],
+        "due": "23 March",
+        "scheduled": "due-2days",
+        "wait": "scheduled", # FAILING
+    }
+    t = Task(**t_dict)
+    assert json.loads(t.json)["scheduled"] == "2019-03-21T00:00:00Z"
+

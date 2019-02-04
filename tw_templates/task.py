@@ -18,6 +18,19 @@ last_id_added = 0
 tasks = []
 
 
+def date_calc_matcher(date: str):
+    date_calc_regex = r"(\D+)([-+])(\d+)(\w+)"
+    m = re.match(date_calc_regex, date)
+    if m:
+        base_param = m.group(1)
+        operator = m.group(2)
+        period = int(m.group(3))
+        period_type = m.group(4)
+        return base_param, operator, period,  period_type,
+    else:
+        return None
+
+
 class Task:
     def __init__(
         self,
@@ -41,11 +54,26 @@ class Task:
         if annotations:
             self.annot = self._add_annotations()
         if due:
-            self.due = self._convert_date(due)
+            _d_formula = date_calc_matcher(due)
+            if _d_formula:
+                # PERFORM CALC
+                pass
+            else:
+                self.due = self._convert_date(due)
         if scheduled:
-            self.scheduled = self._convert_date(scheduled)
+            _d_formula = date_calc_matcher(scheduled)
+            if _d_formula:
+                # PERFORM CALC
+                pass
+            else:
+                self.scheduled = self._convert_date(scheduled)
         if wait:
-            self.wait = self._convert_date(wait)
+            _d_formula = date_calc_matcher(wait)
+            if _d_formula:
+                # PERFORM CALC
+                pass
+            else:
+                self.wait = self._convert_date(wait)
         self._dict = self._to_dict()
 
     def _convert_date(self, date):
