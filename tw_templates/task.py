@@ -4,6 +4,7 @@
 import re
 import datetime
 import uuid
+import json
 import subprocess
 import yaml
 
@@ -18,7 +19,7 @@ tasks = []
 class Task:
     def __init__(
         self,
-        description=None,
+        description,
         tags=None,
         project=None,
         due=None,
@@ -33,14 +34,16 @@ class Task:
         self.annot = annotations
         self.status = "pending"
         self.uuid = str(uuid.uuid4())
-        self.entry = datetime.datetime.now()
+        self.entry = self._serialise_date()
         self._dict = self._to_dict()
+
+    def _serialise_date(self):
+        return datetime.datetime.now().isoformat()
 
     def _to_dict(self):
         # TODO we need to get the actual attributes that are passed in.
         # Then we we need to create the dict accordingly so that
         # we don't end up with None values in the json.
-        _d = {}
         return dict(
             description=self.desc,
             tags=self.tags,
@@ -50,7 +53,15 @@ class Task:
             status=self.status,
             uuid=self.uuid,
             entry=self.entry,
+            annotations=self.annot
         )
+
+    def _export_json(self):
+        return json.dumps(self._to_dict())
+
+    @property
+    def json(self):
+        return self._export_json()
 
     def parse(self, data):
         """
@@ -63,9 +74,6 @@ class Task:
         self.due = data.get("due")
         self.dep = data.get("dep")
         self.annot = data.get("annot")
-
-    def to_json(self):
-        pass
 
     def __str__(self):
         return self.desc

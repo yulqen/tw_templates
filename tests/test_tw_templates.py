@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `tw_templates` package."""
-import datetime
 import json
-
-from uuid import uuid4
 
 import pytest
 
@@ -36,10 +33,10 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert 'tw_templates.cli.main' in result.output
-    help_result = runner.invoke(cli.main, ['--help'])
+    assert "tw_templates.cli.main" in result.output
+    help_result = runner.invoke(cli.main, ["--help"])
     assert help_result.exit_code == 0
-    assert '--help  Show this message and exit.' in help_result.output
+    assert "--help  Show this message and exit." in help_result.output
 
 
 def test_task_obj():
@@ -48,8 +45,8 @@ def test_task_obj():
     """
     t_dict = {
         "description": "Test Task",
-        "annotations": ["First annotation", "Second annotation"]
+        "annotations": ["First annotation", "Second annotation"],
     }
     t = Task(**t_dict)
-    t_json = t.to_json()
-    assert json.loads(t_json)['description'] == "Test Task"
+    assert json.loads(t.json)["description"] == "Test Task"
+    assert json.loads(t.json)["annotations"][0]["description"] == "First annotation"
