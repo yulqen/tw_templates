@@ -36,9 +36,17 @@ class Task:
         self.uuid = str(uuid.uuid4())
         self.entry = self._serialise_date()
         self._dict = self._to_dict()
+        if annotations:
+            self._add_annotations()
 
     def _serialise_date(self):
         return datetime.datetime.now().isoformat()
+
+    def _add_annotations(self):
+        _a = []
+        for a in self.annot:
+            _a.append(dict(entry=self.entry, description=a))
+        self.annot = _a
 
     def _to_dict(self):
         # TODO we need to get the actual attributes that are passed in.

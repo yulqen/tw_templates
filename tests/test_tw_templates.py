@@ -46,7 +46,12 @@ def test_task_obj():
     t_dict = {
         "description": "Test Task",
         "annotations": ["First annotation", "Second annotation"],
+        "tags": ['tag0', 'tag1', 'tag2']
     }
     t = Task(**t_dict)
     assert json.loads(t.json)["description"] == "Test Task"
     assert json.loads(t.json)["annotations"][0]["description"] == "First annotation"
+    assert json.loads(t.json)["annotations"][1]["description"] == "Second annotation"
+    assert json.loads(t.json)["tags"][0] == "tag0"
+    assert json.loads(t.json)["tags"][1] == "tag1"
+    assert json.loads(t.json)["tags"][2] == "tag2"
