@@ -9,6 +9,7 @@ import pytest
 from click.testing import CliRunner
 
 from tw_templates.task import Task
+from tw_templates.utils import date_parser as parse
 from tw_templates import cli
 
 
@@ -46,7 +47,8 @@ def test_task_obj():
     t_dict = {
         "description": "Test Task",
         "annotations": ["First annotation", "Second annotation"],
-        "tags": ['tag0', 'tag1', 'tag2']
+        "tags": ['tag0', 'tag1', 'tag2'],
+        "due": "23 March"
     }
     t = Task(**t_dict)
     assert json.loads(t.json)["description"] == "Test Task"
@@ -55,3 +57,11 @@ def test_task_obj():
     assert json.loads(t.json)["tags"][0] == "tag0"
     assert json.loads(t.json)["tags"][1] == "tag1"
     assert json.loads(t.json)["tags"][2] == "tag2"
+    assert json.loads(t.json)["due"] == "2019-03-23T00:00:00Z"
+
+
+def test_date_parser():
+    """
+    Test date parsing used to build a Task() object.
+    """
+    assert parse("28 Dec 2019 12am") == "2019-12-28T00:00:00Z"

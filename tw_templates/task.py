@@ -8,6 +8,8 @@ import json
 import subprocess
 import yaml
 
+from tw_templates.utils import date_parser
+
 completed_regex = r"Created task (\d)"
 
 post_task = {}
@@ -29,15 +31,19 @@ class Task:
         self.desc = description
         self.tags = tags
         self.proj = project
-        self.due = due
         self.dep = depends
         self.annot = annotations
         self.status = "pending"
         self.uuid = str(uuid.uuid4())
         self.entry = self._serialise_date()
-        self._dict = self._to_dict()
         if annotations:
-            self._add_annotations()
+            self.annot = self._add_annotations()
+        if due:
+            self.due = self._convert_date(due)
+        self._dict = self._to_dict()
+
+    def _convert_date(self, date):
+        return date_parser(date)
 
     def _serialise_date(self):
         return datetime.datetime.now().isoformat()
@@ -46,12 +52,9 @@ class Task:
         _a = []
         for a in self.annot:
             _a.append(dict(entry=self.entry, description=a))
-        self.annot = _a
+        return _a
 
     def _to_dict(self):
-        # TODO we need to get the actual attributes that are passed in.
-        # Then we we need to create the dict accordingly so that
-        # we don't end up with None values in the json.
         return dict(
             description=self.desc,
             tags=self.tags,
@@ -87,7 +90,7 @@ class Task:
         return self.desc
 
     def __repr__(self):
-        return self.desc
+        return "Task({!r})".format(self.desc)
 
 
 def read_file(f: str):
