@@ -54,7 +54,10 @@ lint: ## check style with flake8
 	flake8 tw_templates tests
 
 test: ## run tests quickly with the default Python
-	py.test --tb=short --disable-warnings --verbose
+	py.test --tb=short --disable-warnings --verbose -x
+
+test-pdb: ## run pytests but quite in the debugger
+	py.test --tb=short --disable-warnings --verbose --pdb
 
 test-all: ## run tests on every Python version with tox
 	tox

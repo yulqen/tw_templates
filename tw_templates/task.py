@@ -8,6 +8,8 @@ import json
 import subprocess
 import yaml
 
+from typing import NamedTuple, Union, List, Optional
+
 from tw_templates.utils import date_parser
 
 completed_regex = r"Created task (\d)"
@@ -18,17 +20,50 @@ last_id_added = 0
 tasks = []
 
 
-def date_calc_matcher(date: str):
-    date_calc_regex = r"(\D+)([-+])(\d+)(\w+)"
+class DateCalc(NamedTuple):
+    entity: str
+    operator: str
+    value: int
+    period: str
+
+
+class EntityCalc(NamedTuple):
+    entity: str
+
+
+def date_calc_matcher(date: str) -> Union[DateCalc, EntityCalc, None]:
+    """
+    Returns a DateCalc or EntityCalc NamedTuple based
+    on a date string entered.
+    """
+    date_calc_regex = r"^(sched|due|wait)([+-])(\d+)(\w+)"
+    entity_regex = r"^(sched|due|wait)$"
+
     m = re.match(date_calc_regex, date)
+    me = re.match(entity_regex, date)
     if m:
-        base_param = m.group(1)
-        operator = m.group(2)
-        period = int(m.group(3))
-        period_type = m.group(4)
-        return base_param, operator, period,  period_type,
+        m_tup = list(m.groups())
+        i = int(m_tup[2])
+        m_tup[2] = i
+        return DateCalc(*tuple(m_tup))
+    if me:
+        return EntityCalc(me.group(0))
     else:
         return None
+
+
+class _Holder(NamedTuple):
+    """
+    We create one of these before initialising a Task object.
+    """
+
+    description: Optional[str]
+    tags: Optional[List]
+    project: Optional[str]
+    due: Optional[str]
+    wait: Optional[str]
+    scheduled: Optional[str]
+    annotations: Optional[List]
 
 
 class Task:
@@ -43,34 +78,45 @@ class Task:
         depends=None,
         annotations=None,
     ):
-        self.desc = description
-        self.tags = tags
-        self.proj = project
-        self.dep = depends
-        self.annot = annotations
-        self.status = "pending"
-        self.uuid = str(uuid.uuid4())
-        self.entry = self._serialise_date()
+#       self.desc = description
+#       self.tags = tags
+#       self.proj = project
+#       self.dep = depends
+#       self.annot = annotations
+#       self.status = "pending"
+#       self.uuid = str(uuid.uuid4())
+#       self.entry = self._serialise_date()
+        hold = _Holder(
+            description,
+            tags,
+            project,
+            due,
+            wait,
+            scheduled,
+            depends,
+            annotations
+        )
         if annotations:
-            self.annot = self._add_annotations()
+            hold.annotations = self._add_annotations()
         if due:
             _d_formula = date_calc_matcher(due)
-            if _d_formula:
-                # PERFORM CALC
-                pass
+            if isinstance(_d_formula, DateCalc):
+                entity = _d_formula.entity
+                operator = _d_formula.operator
+                value = _d_formula.value
+                period = _d_formula.period
+
             else:
                 self.due = self._convert_date(due)
         if scheduled:
             _d_formula = date_calc_matcher(scheduled)
             if _d_formula:
-                # PERFORM CALC
                 pass
             else:
                 self.scheduled = self._convert_date(scheduled)
         if wait:
             _d_formula = date_calc_matcher(wait)
             if _d_formula:
-                # PERFORM CALC
                 pass
             else:
                 self.wait = self._convert_date(wait)
@@ -100,7 +146,7 @@ class Task:
             status=self.status,
             uuid=self.uuid,
             entry=self.entry,
-            annotations=self.annot
+            annotations=self.annot,
         )
 
     def _export_json(self):

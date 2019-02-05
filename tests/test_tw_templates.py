@@ -3,6 +3,7 @@
 
 """Tests for `tw_templates` package."""
 import json
+from datetime import date
 
 import pytest
 
@@ -74,9 +75,29 @@ def test_date_parser():
 
 def test_date_calc_match():
     d_str = "due-2days"
-    e_str = "scheduled+30weeks"
-    assert date_calc_matcher(d_str) == ("due", "-", 2, "days")
-    assert date_calc_matcher(e_str) == ("scheduled", "+", 30, "weeks")
+    e_str = "sched+30weeks"
+    sch_str = "sched"
+    assert date_calc_matcher(d_str).entity == "due"
+    assert date_calc_matcher(d_str).operator == "-"
+    assert date_calc_matcher(d_str).value == 2
+    assert date_calc_matcher(d_str).period == "days"
+    assert date_calc_matcher(e_str).entity == "sched"
+    assert date_calc_matcher(e_str).operator == "+"
+    assert date_calc_matcher(e_str).value == 30
+    assert date_calc_matcher(e_str).period == "weeks"
+    assert date_calc_matcher(sch_str).entity == "sched"
+
+
+def _data_calc_handler(tup):
+    """
+    Takes a NamedTuple of type DateCalc or EntityCalc.
+    """
+    pass
+
+
+def test_date_calc_handler():
+    due = date(2012, 12, 12)
+    scheduled = date(2012, 12, 4)
 
 
 def test_date_calcs():
@@ -89,8 +110,9 @@ def test_date_calcs():
         "tags": ["tag0", "tag1", "tag2"],
         "due": "23 March",
         "scheduled": "due-2days",
-        "wait": "scheduled", # FAILING
+        "wait": "sched",
     }
+    breakpoint()
     t = Task(**t_dict)
     assert json.loads(t.json)["scheduled"] == "2019-03-21T00:00:00Z"
 
