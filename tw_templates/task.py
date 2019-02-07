@@ -8,6 +8,8 @@ import json
 import subprocess
 import yaml
 
+from dataclasses import dataclass
+
 from typing import NamedTuple, Union, List, Optional
 
 from tw_templates.utils import date_parser
@@ -52,18 +54,19 @@ def date_calc_matcher(date: str) -> Union[DateCalc, EntityCalc, None]:
         return None
 
 
-class _Holder(NamedTuple):
+@dataclass
+class _Holder:
     """
     We create one of these before initialising a Task object.
     """
-
     description: Optional[str]
     tags: Optional[List]
     project: Optional[str]
-    due: Optional[str]
-    wait: Optional[str]
-    scheduled: Optional[str]
-    annotations: Optional[List]
+    due: Optional[Union[str, DateCalc, EntityCalc]]
+    wait: Optional[Union[str, DateCalc, EntityCalc]]
+    scheduled: Optional[Union[str, DateCalc, EntityCalc]]
+    depends: Optional[str]
+    annotations: Union[List]
 
 
 class Task:
@@ -78,14 +81,17 @@ class Task:
         depends=None,
         annotations=None,
     ):
-#       self.desc = description
-#       self.tags = tags
-#       self.proj = project
-#       self.dep = depends
-#       self.annot = annotations
-#       self.status = "pending"
-#       self.uuid = str(uuid.uuid4())
-#       self.entry = self._serialise_date()
+        self.description = description
+        self.tags = tags
+        self.project = project
+        self.due = None
+        self.wait = None
+        self.scheduled = None
+        self.depends = depends
+        self.annotations = annotations
+        self.status = "pending"
+        self.uuid = str(uuid.uuid4())
+        self.entry = self._serialise_date()
         hold = _Holder(
             description,
             tags,
@@ -97,29 +103,26 @@ class Task:
             annotations
         )
         if annotations:
-            hold.annotations = self._add_annotations()
+            hold.annotations = self._add_annotations(annotations)
         if due:
             _d_formula = date_calc_matcher(due)
-            if isinstance(_d_formula, DateCalc):
-                entity = _d_formula.entity
-                operator = _d_formula.operator
-                value = _d_formula.value
-                period = _d_formula.period
-
+            if isinstance(_d_formula, (DateCalc, EntityCalc)):
+                hold.due = _d_formula
             else:
-                self.due = self._convert_date(due)
+                hold.due = self._convert_date(due)
         if scheduled:
             _d_formula = date_calc_matcher(scheduled)
-            if _d_formula:
-                pass
+            if isinstance(_d_formula, (DateCalc, EntityCalc)):
+                hold.scheduled = _d_formula
             else:
-                self.scheduled = self._convert_date(scheduled)
+                hold.scheduled = self._convert_date(scheduled)
         if wait:
             _d_formula = date_calc_matcher(wait)
-            if _d_formula:
-                pass
+            if isinstance(_d_formula, (DateCalc, EntityCalc)):
+                hold.scheduled = _d_formula
             else:
-                self.wait = self._convert_date(wait)
+                hold.wait = self._convert_date(wait)
+        # hold off on this until we process _Holder data
         self._dict = self._to_dict()
 
     def _convert_date(self, date):
@@ -128,25 +131,25 @@ class Task:
     def _serialise_date(self):
         return datetime.datetime.now().isoformat()
 
-    def _add_annotations(self):
+    def _add_annotations(self, annotations):
         _a = []
-        for a in self.annot:
+        for a in annotations:
             _a.append(dict(entry=self.entry, description=a))
         return _a
 
     def _to_dict(self):
         return dict(
-            description=self.desc,
+            description=self.description,
             tags=self.tags,
-            project=self.proj,
+            project=self.project,
             due=self.due,
             scheduled=self.scheduled,
             wait=self.wait,
-            depends=self.dep,
+            depends=self.depends,
             status=self.status,
             uuid=self.uuid,
             entry=self.entry,
-            annotations=self.annot,
+            annotations=self.annotations,
         )
 
     def _export_json(self):
@@ -182,7 +185,6 @@ def read_file(f: str):
 
 
 def parse_tasks(data: dict):
-    breakpoint()
     for task in data.values():
         tasks.append(Task(**task))
         added = subprocess.run(
@@ -204,7 +206,6 @@ def parse_tasks(data: dict):
             post_task.pop("annotation")
 
         if post_task.get("depends"):
-            breakpoint()
             dep_id = int(t_id) - int(dep_indicator)
             if dep_id <= 0:
                 print("Check your dependency id. Doesn't make sense")
