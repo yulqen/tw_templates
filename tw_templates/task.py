@@ -164,18 +164,18 @@ class Task:
         Takes the output of each item in yaml.safe_load().
         """
         self.id = data.get("id")
-        self.desc = data.get("description")
+        self.description = data.get("description")
         self.tags = data.get("tags")
-        self.proj = data.get("proj")
+        self.project = data.get("proj")
         self.due = data.get("due")
-        self.dep = data.get("dep")
-        self.annot = data.get("annot")
+        self.depends = data.get("dep")
+        self.annotations = data.get("annot")
 
     def __str__(self):
         return self.desc
 
     def __repr__(self):
-        return "Task({!r})".format(self.desc)
+        return "Task({!r})".format(self.description)
 
 
 def read_file(f: str):
