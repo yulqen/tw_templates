@@ -95,9 +95,9 @@ def _data_calc_handler(tup):
     pass
 
 
-def test_date_calc_handler():
-    due = date(2012, 12, 12)
-    scheduled = date(2012, 12, 4)
+#def test_date_calc_handler():
+#    due = date(2012, 12, 12)
+#    scheduled = date(2012, 12, 4)
 
 
 def test_date_calcs():

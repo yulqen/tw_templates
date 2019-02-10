@@ -8,7 +8,7 @@ import json
 import subprocess
 import yaml
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typing import NamedTuple, Union, List, Optional
 
@@ -67,6 +67,7 @@ class _Holder:
     scheduled: Optional[Union[str, DateCalc, EntityCalc]]
     depends: Optional[str]
     annotations: Union[List]
+    req_calcs: list = field(default_factory=list)
 
 
 class Task:
@@ -100,30 +101,47 @@ class Task:
             wait,
             scheduled,
             depends,
-            annotations
+            annotations,
         )
         if annotations:
-            hold.annotations = self._add_annotations(annotations)
+            self.annotations = self._add_annotations(annotations)
         if due:
             _d_formula = date_calc_matcher(due)
             if isinstance(_d_formula, (DateCalc, EntityCalc)):
                 hold.due = _d_formula
+                hold.req_calcs.append("due")
             else:
                 hold.due = self._convert_date(due)
         if scheduled:
             _d_formula = date_calc_matcher(scheduled)
             if isinstance(_d_formula, (DateCalc, EntityCalc)):
                 hold.scheduled = _d_formula
+                hold.req_calcs.append("scheduled")
             else:
                 hold.scheduled = self._convert_date(scheduled)
         if wait:
             _d_formula = date_calc_matcher(wait)
             if isinstance(_d_formula, (DateCalc, EntityCalc)):
-                hold.scheduled = _d_formula
+                hold.wait = _d_formula
+                hold.req_calcs.append("wait")
             else:
                 hold.wait = self._convert_date(wait)
         # hold off on this until we process _Holder data
-        self._dict = self._to_dict()
+        if not len(hold.req_calcs) > 0:
+            self.due = hold.due
+            self.wait = hold.wait
+            self.scheduled = hold.scheduled
+            self._dict = self._to_dict()
+        else:
+            # we pass the req_cals to a func to process
+
+            kwargs = {item: getattr(hold, item) for item in hold.req_calcs}
+            self.process_calcs(kwargs)
+
+    def process_calcs(self, calc_dict):
+        # TODO use some fancy stuff to calculate the dates!
+        print(calc_dict)
+        pass
 
     def _convert_date(self, date):
         return date_parser(date)
