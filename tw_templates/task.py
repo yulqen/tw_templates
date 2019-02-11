@@ -127,20 +127,23 @@ class Task:
             else:
                 hold.wait = self._convert_date(wait)
         # hold off on this until we process _Holder data
-        if not len(hold.req_calcs) > 0:
+        if len(hold.req_calcs) > 0:
+            data_metadata = {"due", "scheduled", "wait"}
+            for i in data_metadata:
+                # anything not in hold.req_calcs gets added to self
+                if i not in hold.req_calcs:
+                    setattr(self, i, getattr(hold, i))
+            calc_data = {item: getattr(hold, item) for item in hold.req_calcs}
+            self.process_calcs(calc_data)
+        else:
             self.due = hold.due
             self.wait = hold.wait
             self.scheduled = hold.scheduled
             self._dict = self._to_dict()
-        else:
-            # we pass the req_cals to a func to process
 
-            kwargs = {item: getattr(hold, item) for item in hold.req_calcs}
-            self.process_calcs(kwargs)
-
-    def process_calcs(self, calc_dict):
+    def process_calcs(self, calc_data):
         # TODO use some fancy stuff to calculate the dates!
-        print(calc_dict)
+        print(calc_data)
         pass
 
     def _convert_date(self, date):
