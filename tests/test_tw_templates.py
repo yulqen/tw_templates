@@ -10,6 +10,7 @@ import pytest
 from click.testing import CliRunner
 
 from tw_templates.task import Task, date_calc_matcher
+from tw_templates.task import DateCalc, EntityCalc
 from tw_templates.utils import date_parser as parse
 from tw_templates import cli
 
@@ -98,6 +99,23 @@ def _data_calc_handler(tup):
 #def test_date_calc_handler():
 #    due = date(2012, 12, 12)
 #    scheduled = date(2012, 12, 4)
+
+def test_date_calc_func():
+    t_dict = {
+        "description": "Test Task",
+        "annotations": ["First annotation", "Second annotation"],
+        "tags": ["tag0", "tag1", "tag2"],
+        "due": "23 March",
+        "scheduled": "due-2days",
+        "wait": "sched",
+    }
+    t = Task(**t_dict)
+    # {'scheduled': DateCalc(entity='due', operator='-', value=2, period='days'), 'wait': EntityCalc(entity='sched')}
+    d = DateCalc("due", "-", 2, "days")
+    e = EntityCalc("sched")
+    t.process_calcs({"scheduled": d, "wait": e})
+    assert t.scheduled == "2019-03-21T00:00:00Z"
+    assert t.wait == t.scheduled
 
 
 def test_date_calcs():
