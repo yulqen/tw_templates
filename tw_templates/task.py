@@ -93,6 +93,7 @@ class Task:
         self.status = "pending"
         self.uuid = str(uuid.uuid4())
         self.entry = self._serialise_date()
+        self._data_metadata = {"due", "scheduled", "wait"}
         hold = _Holder(
             description,
             tags,
@@ -128,8 +129,7 @@ class Task:
                 hold.wait = self._convert_date(wait)
         # hold off on this until we process _Holder data
         if len(hold.req_calcs) > 0:
-            data_metadata = {"due", "scheduled", "wait"}
-            for i in data_metadata:
+            for i in self._data_metadata:
                 # anything not in hold.req_calcs gets added to self
                 if i not in hold.req_calcs:
                     setattr(self, i, getattr(hold, i))
@@ -142,7 +142,15 @@ class Task:
             self._dict = self._to_dict()
 
     def process_calcs(self, calc_data):
-        # TODO use some fancy stuff to calculate the dates!
+        for i in calc_data.items():
+            if isinstance(i[1], DateCalc):
+                _comp = i[1].entity
+                try:
+                    _comp_str = getattr(self, _comp)
+                except AttributeError:
+                    raise
+                finally:
+                    _comp_date = datetime.date.fromisoformat((_comp_str[:10]))
         print(calc_data)
         pass
 

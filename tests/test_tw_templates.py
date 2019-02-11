@@ -113,6 +113,7 @@ def test_date_calc_func():
     # {'scheduled': DateCalc(entity='due', operator='-', value=2, period='days'), 'wait': EntityCalc(entity='sched')}
     d = DateCalc("due", "-", 2, "days")
     e = EntityCalc("sched")
+    breakpoint()
     t.process_calcs({"scheduled": d, "wait": e})
     assert t.scheduled == "2019-03-21T00:00:00Z"
     assert t.wait == t.scheduled
