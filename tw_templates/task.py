@@ -59,6 +59,7 @@ class _Holder:
     """
     We create one of these before initialising a Task object.
     """
+
     description: Optional[str]
     tags: Optional[List]
     project: Optional[str]
@@ -95,14 +96,7 @@ class Task:
         self.entry = self._serialise_date()
         self._data_metadata = {"due", "scheduled", "wait"}
         hold = _Holder(
-            description,
-            tags,
-            project,
-            due,
-            wait,
-            scheduled,
-            depends,
-            annotations,
+            description, tags, project, due, wait, scheduled, depends, annotations
         )
         if annotations:
             self.annotations = self._add_annotations(annotations)
@@ -134,25 +128,33 @@ class Task:
                 if i not in hold.req_calcs:
                     setattr(self, i, getattr(hold, i))
             calc_data = {item: getattr(hold, item) for item in hold.req_calcs}
-            self.process_calcs(calc_data)
+            self.process_calcs(hold, calc_data)
         else:
             self.due = hold.due
             self.wait = hold.wait
             self.scheduled = hold.scheduled
             self._dict = self._to_dict()
+            # we pass the req_cals to a func to process
 
-    def process_calcs(self, calc_data):
-        for i in calc_data.items():
-            if isinstance(i[1], DateCalc):
-                _comp = i[1].entity
-                try:
-                    _comp_str = getattr(self, _comp)
-                except AttributeError:
-                    raise
-                finally:
-                    _comp_date = datetime.date.fromisoformat((_comp_str[:10]))
-        print(calc_data)
-        pass
+    def _process_date(self, holder, date_calc, entity):
+        try:
+            assert isinstance(date_calc, DateCalc)
+        except AssertionError:
+            raise AssertionError("First argument must be a DateCalc object")
+        try:
+            assert isinstance(entity, EntityCalc)
+        except AssertionError:
+            raise AssertionError("Second argument must be an EntityCalc object")
+        d = datetime.datetime.fromisoformat(holder.due[:-1])  # drop the "Z"
+        self.scheduled = "".join(
+            ((d - datetime.timedelta(days=date_calc.value)).isoformat(), "Z")
+        )
+        self.due = d.isoformat()
+        self.wait = self.scheduled
+
+    def process_calcs(self, holder, calc_dict):
+        self._process_date(holder, calc_dict["scheduled"], calc_dict["wait"])
+        self._to_dict()
 
     def _convert_date(self, date):
         return date_parser(date)

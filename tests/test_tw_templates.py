@@ -107,12 +107,12 @@ def test_date_calc_func():
         "tags": ["tag0", "tag1", "tag2"],
         "due": "23 March",
         "scheduled": "due-2days",
-        "wait": "sched",
+        "wait": "scheduled",
     }
     t = Task(**t_dict)
     # {'scheduled': DateCalc(entity='due', operator='-', value=2, period='days'), 'wait': EntityCalc(entity='sched')}
     d = DateCalc("due", "-", 2, "days")
-    e = EntityCalc("sched")
+    e = EntityCalc("scheduled")
     breakpoint()
     t.process_calcs({"scheduled": d, "wait": e})
     assert t.scheduled == "2019-03-21T00:00:00Z"
@@ -129,9 +129,8 @@ def test_date_calcs():
         "tags": ["tag0", "tag1", "tag2"],
         "due": "23 March",
         "scheduled": "due-2days",
-        "wait": "sched",
+        "wait": "scheduled",
     }
-    breakpoint()
     t = Task(**t_dict)
     assert json.loads(t.json)["scheduled"] == "2019-03-21T00:00:00Z"
 
